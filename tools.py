@@ -132,4 +132,4 @@ if __name__ == "__main__":
   print('name:', db.name)
   print('description:', db.description)
   print('args:', db.args)
-  res = db.invoke({'请查询在2021年度，688338股票涨停天数？'})
+  res = db.invoke({'input': '请查询在2021年度，688338股票涨停天数？'})
