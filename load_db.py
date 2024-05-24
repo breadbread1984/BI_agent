@@ -4,7 +4,7 @@ from absl import flags, app
 from tqdm import tqdm
 from os import walk
 from os.path import splitext, join
-from langchain_community.document_loaders import UnstructuredPDFLoader, UnstructuredFileLoader, UnstructuredMarkdownLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader, TextLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers.llm import LLMGraphTransformer
@@ -31,7 +31,7 @@ def main(unused_argv):
     for f in files:
       stem, ext = splitext(f)
       loader_types = {'.md': UnstructuredMarkdownLoader,
-                      '.txt': UnstructuredFileLoader,
+                      '.txt': TextLoader,
                       '.pdf': UnstructuredPDFLoader}
       loader = loader_types[ext](join(root, f), mode = "single", strategy = "fast")
       docs.extend(loader.load())
