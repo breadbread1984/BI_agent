@@ -199,7 +199,7 @@ Answer: Final answer here
 
 Question: {input}"""
   messages = [
-    ('role': 'user', 'content': _sqlite_prompt + PROMPT_SUFFIX)
+    {'role': 'user', 'content': _sqlite_prompt + PROMPT_SUFFIX}
   ]
   prompt = tokenizer.apply_chat_template(messages, tokenize = False, add_generation_prompt = True)
   template = PromptTemplate(template = prompt, input_variables = ['input', 'table_info', 'top_k'])
