@@ -49,11 +49,15 @@ to
 
 ```python
 for rel in parsed_json:
-    if type(rel) is not dict: continue
-    if "head" not in rel or "head_type" not in rel: continue
-    if "tail" not in rel or "tail_type" not in rel: continue
-    if rel["head"] is None or rel["head_type"] is None: continue
-    if rel["tail"] is None or rel["tail_type"] is None: continue
+    invalid = False
+    if type(rel) is not dict: invalid = True
+    if "head" not in rel or "head_type" not in rel: invalid = True
+    if "tail" not in rel or "tail_type" not in rel: invalid = True
+    if rel["head"] is None or rel["head_type"] is None: invalid = True
+    if rel["tail"] is None or rel["tail_type"] is None: invalid = True
+    if invalid:
+        print('invalid json: %s' % raw_schema)
+        continue
     # Nodes need to be deduplicated using a set 
     nodes_set.add((rel["head"], rel["head_type"]))
     nodes_set.add((rel["tail"], rel["tail_type"]))
