@@ -102,6 +102,7 @@ def load_database():
       raise NotImplementedError("DatabaseTool does not support async!")
 
 if __name__ == "__main__":
+  # 1) test knowledge graph
   kb = load_knowledge_graph(password = '19841124')
   print('name:',kb.name)
   print('description:', kb.description)
@@ -110,3 +111,10 @@ if __name__ == "__main__":
   print(res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
+
+  # 2) test sql base
+  db = load_database()
+  print('name:', db.name)
+  print('description:', db.description)
+  print('args:', db.args)
+  res = db.invoke({'请查询在2021年度，688338股票涨停天数？'})
