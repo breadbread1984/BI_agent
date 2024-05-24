@@ -87,7 +87,7 @@ def load_database(sqlite_path):
     tokenizer: PreTrainedTokenizerFast
     llm: HuggingFaceEndpoint
 
-  class DatabaseTool(BaseModel):
+  class DatabaseTool(BaseTool):
     name = "金融数据查询工具"
     description = '当你有基金基本信息，基金股票持仓明细，基金债券持仓明细，基金可转债持仓明细，基金日行情表，A股票日行情表，港股票日行情表，A股公司行业划分表，基金规模变动表，基金份额持有人结构，相关问题可以调用这个工具'
     args_schema: Type[BaseModel] = DatabaseInput
