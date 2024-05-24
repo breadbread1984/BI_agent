@@ -72,7 +72,10 @@ result = self.database.run(sql_cmd)
 to
 ```python
 import re
-pattern = r"```(.*)```"
+pattern = r"```sql(.*)```"
 match = re.search(pattern, sql_cmd, re.DOTALL)
+if match is None:
+  pattern = r"```(.*)```"
+  match = re.search(pattern, sql_cmd, re.DOTALL)
 result = match[1] if match is not None else sql_cmd
 ```
