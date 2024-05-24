@@ -40,7 +40,7 @@ def main(unused_argv):
       docs.extend(loader.load())
   # 2) split pages into chunks and save to split_docs
   print('split pages into chunks')
-  text_splitter = RecursiveCharacterTextSplitter(chunk_size = 200, chunk_overlap = 50)
+  text_splitter = RecursiveCharacterTextSplitter(chunk_size = 100, chunk_overlap = 25)
   split_docs = text_splitter.split_documents(docs)
   # 3) erase content of neo4j
   neo4j.query('match (a)-[r]-(b) delete a,r,b')
