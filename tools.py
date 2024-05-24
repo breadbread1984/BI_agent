@@ -77,7 +77,7 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
   )
   return ProspectusTool(config = ProspectusConfig(neo4j = neo4j, tokenizer = tokenizer, llm = llm))
 
-def load_database():
+def load_database(sqlite_path):
   class DatabaseInput(BaseModel):
     query: str = Field(description = "需要询问的金融问题")
 
@@ -101,6 +101,21 @@ def load_database():
     async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
       raise NotImplementedError("DatabaseTool does not support async!")
 
+  environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
+  tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-8B-Instruct')
+  llm = HuggingFaceEndpoint(
+    endpoint_url = "meta-llama/Meta-Llama-3-8B-Instruct",
+    task = "text-generation",
+    max_length = 16384,
+    do_sample = False,
+    temperature = 0.6,
+    top_p = 0.9,
+    eos_token_id = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")],
+    use_cache = True,
+  )
+  db = SQLDatabase.from_uri(sqlite_path)
+  return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
+
 if __name__ == "__main__":
   # 1) test knowledge graph
   kb = load_knowledge_graph(password = '19841124')
@@ -113,7 +128,7 @@ if __name__ == "__main__":
   kb.config.neo4j._driver.close()
 
   # 2) test sql base
-  db = load_database()
+  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db')
   print('name:', db.name)
   print('description:', db.description)
   print('args:', db.args)
