@@ -38,7 +38,9 @@ def main(unused_argv):
   print('split pages into chunks')
   text_splitter = RecursiveCharacterTextSplitter(chunk_size = 200, chunk_overlap = 50)
   split_docs = text_splitter.split_documents(docs)
-  # 3) extract triplets from documents
+  # 3) erase content of neo4j
+  neo4j.query('match (a)-[r]-(b) delete a,r,b')
+  # 4) extract triplets from documents
   print('extract triplets from documents')
   prompt, _ = extract_triplets_template(tokenizer)
   graph = LLMGraphTransformer(
