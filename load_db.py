@@ -33,7 +33,10 @@ def main(unused_argv):
       loader_types = {'.md': UnstructuredMarkdownLoader,
                       '.txt': TextLoader,
                       '.pdf': UnstructuredPDFLoader}
-      loader = loader_types[ext](join(root, f), mode = "single", strategy = "fast")
+      if ext != '.txt':
+        loader = loader_types[ext](join(root, f), mode = "single", strategy = "fast")
+      else:
+        loader = loader_types[ext](join(root, f))
       docs.extend(loader.load())
   # 2) split pages into chunks and save to split_docs
   print('split pages into chunks')
