@@ -90,7 +90,7 @@ def load_database(sqlite_path):
   class DatabaseTool(BaseModel):
     name = "金融数据查询工具"
     description = '当你有基金基本信息，基金股票持仓明细，基金债券持仓明细，基金可转债持仓明细，基金日行情表，A股票日行情表，港股票日行情表，A股公司行业划分表，基金规模变动表，基金份额持有人结构，相关问题可以调用这个工具'
-    args_schema: Type[DatabaseInput] = DatabaseInput
+    args_schema: Type[BaseModel] = DatabaseInput
     return_direct: bool = True
     config: DatabaseConfig
     def _run(self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
@@ -116,7 +116,7 @@ def load_database(sqlite_path):
   return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
 
 if __name__ == "__main__":
-
+  '''
   # 1) test knowledge graph
   kb = load_knowledge_graph(password = '19841124')
   print('name:',kb.name)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
   print(res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
-
+  '''
   # 2) test sql base
   db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db')
   print('name:', db.name)
