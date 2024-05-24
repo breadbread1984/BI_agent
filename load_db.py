@@ -16,7 +16,7 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_string('doc_dir', default = None, help = 'path to directory containing documents')
   flags.DEFINE_string('host', default = 'localhost', help = 'host of neo4j')
-  flags.DEFINE_integer('port', default = 7689, help = 'port number')
+  flags.DEFINE_integer('port', default = 7687, help = 'port number')
   flags.DEFINE_string('user', default = 'neo4j', help = 'username of neo4j')
   flags.DEFINE_string('password', default = None, help = 'password of neo4j')
   flags.DEFINE_string('db', default = 'neo4j', help = 'database of neo4j')
