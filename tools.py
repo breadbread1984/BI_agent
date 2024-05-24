@@ -12,7 +12,6 @@ from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, Callback
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt
-from reaction_path import PrecursorsRecommendation
 
 def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j'):
   class ProspectusInput(BaseModel):
@@ -117,6 +116,7 @@ def load_database(sqlite_path):
   return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
 
 if __name__ == "__main__":
+  '''
   # 1) test knowledge graph
   kb = load_knowledge_graph(password = '19841124')
   print('name:',kb.name)
@@ -126,9 +126,9 @@ if __name__ == "__main__":
   print(res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
-
+  '''
   # 2) test sql base
-  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db')
+  db = load_database('../bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db')
   print('name:', db.name)
   print('description:', db.description)
   print('args:', db.args)
