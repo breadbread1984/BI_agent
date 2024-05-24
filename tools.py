@@ -7,13 +7,14 @@ from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
-from langchain_community.llms import HuggingFaceEndpoint
+from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt
+from models import Llama3, CodeLlama
 
-def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j'):
+def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j', locally = False):
   class ProspectusInput(BaseModel):
     query: str = Field(description = "招股说明书相关的问题")
 
@@ -22,7 +23,7 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
       arbitrary_types_allowed = True
     neo4j: Neo4jGraph
     tokenizer: PreTrainedTokenizerFast
-    llm: HuggingFaceEndpoint
+    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
 
   class ProspectusTool(BaseTool):
     name = "招股说明书"
@@ -61,22 +62,11 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
     async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
       raise NotImplementedError("Prospectus does not suppert async!")
 
-  environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
   neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
-  tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-8B-Instruct')
-  llm = HuggingFaceEndpoint(
-    endpoint_url = "meta-llama/Meta-Llama-3-8B-Instruct",
-    task = "text-generation",
-    max_length = 16384,
-    do_sample = False,
-    temperature = 0.6,
-    top_p = 0.9,
-    eos_token_id = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")],
-    use_cache = True,
-  )
+  tokenizer, llm = Llama3(locally = locally)
   return ProspectusTool(config = ProspectusConfig(neo4j = neo4j, tokenizer = tokenizer, llm = llm))
 
-def load_database(sqlite_path):
+def load_database(sqlite_path, locally = False):
   class DatabaseInput(BaseModel):
     query: str = Field(description = "需要询问的金融问题")
 
@@ -85,7 +75,7 @@ def load_database(sqlite_path):
       arbitrary_types_allowed = True
     db: SQLDatabase
     tokenizer: PreTrainedTokenizerFast
-    llm: HuggingFaceEndpoint
+    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
 
   class DatabaseTool(BaseTool):
     name = "金融数据查询工具"
@@ -100,18 +90,7 @@ def load_database(sqlite_path):
     async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
       raise NotImplementedError("DatabaseTool does not support async!")
 
-  environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
-  tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-8B-Instruct')
-  llm = HuggingFaceEndpoint(
-    endpoint_url = "meta-llama/Meta-Llama-3-8B-Instruct",
-    task = "text-generation",
-    max_length = 16384,
-    do_sample = False,
-    temperature = 0.6,
-    top_p = 0.9,
-    eos_token_id = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")],
-    use_cache = True,
-  )
+  tokenizer, llm = Llama3(locally)
   db = SQLDatabase.from_uri('sqlite:///%s' % sqlite_path)
   return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
 
@@ -128,7 +107,7 @@ if __name__ == "__main__":
   kb.config.neo4j._driver.close()
   '''
   # 2) test sql base
-  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db')
+  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', locally = True)
   print('name:', db.name)
   print('description:', db.description)
   print('args:', db.args)
