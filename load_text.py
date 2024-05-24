@@ -30,6 +30,7 @@ def main(unused_argv):
   for root, dirs, files in tqdm(walk(FLAGS.doc_dir)):
     for f in files:
       stem, ext = splitext(f)
+      ext = ext.lower()
       loader_types = {'.md': UnstructuredMarkdownLoader,
                       '.txt': TextLoader,
                       '.pdf': UnstructuredPDFLoader}
