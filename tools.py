@@ -133,3 +133,4 @@ if __name__ == "__main__":
   print('description:', db.description)
   print('args:', db.args)
   res = db.invoke({'query': '请查询在2021年度，688338股票涨停天数？'})
+  print(res)
