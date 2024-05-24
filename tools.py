@@ -9,7 +9,9 @@ from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
-from prompts import entity_generation_template, triplets_qa_template
+from langchain import SQLDatabase
+from langchain_experimental.sql import SQLDatabaseChain
+from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt
 from reaction_path import PrecursorsRecommendation
 
 def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j'):
@@ -74,6 +76,30 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
     use_cache = True,
   )
   return ProspectusTool(config = ProspectusConfig(neo4j = neo4j, tokenizer = tokenizer, llm = llm))
+
+def load_database():
+  class DatabaseInput(BaseModel):
+    query: str = Field(description = "需要询问的金融问题")
+
+  class DatabaseConfig(BaseModel):
+    class Config:
+      arbitrary_types_allowed = True
+    db: SQLDatabase
+    tokenizer: PreTrainedTokenizerFast
+    llm: HuggingFaceEndpoint
+
+  class DatabaseTool(BaseModel):
+    name = "金融数据查询工具"
+    description = '当你有基金基本信息，基金股票持仓明细，基金债券持仓明细，基金可转债持仓明细，基金日行情表，A股票日行情表，港股票日行情表，A股公司行业划分表，基金规模变动表，基金份额持有人结构，相关问题可以调用这个工具'
+    args_schema: Type[DatabaseInput] = DatabaseInput
+    return_direct: bool = True
+    config: DatabaseConfig
+    def _run(self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+      prompt = sqlite_prompt(self.config.tokenizer)
+      chain = SQLDatabaseChain.from_llm(llm = self.config.llm, db = self.config.db, prompt = prompt)
+      return chain.run(query)
+    async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
+      raise NotImplementedError("DatabaseTool does not support async!")
 
 if __name__ == "__main__":
   kb = load_knowledge_graph(password = '19841124')
