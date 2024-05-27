@@ -2,7 +2,7 @@
 
 this project is to solve the challenge post at [tianchi challenge](https://tianchi.aliyun.com/competition/entrance/532164)
 
-# Usage
+# Environment preparation
 
 ## Install prerequisite packages
 
@@ -80,3 +80,12 @@ if match is None:
 sql_cmd = match[1] if match is not None else sql_cmd
 result = self.database.run(sql_cmd)
 ```
+
+# Usage
+
+## load prospectus
+
+```shell
+python3 load_text.py --doc_dir bs_challenge_financial_14b_dataset/pdf_txt_file/ --password <password/of/neo4j>
+```
+
