@@ -10,6 +10,12 @@ this project is to solve the challenge post at [tianchi challenge](https://tianc
 python3 -m pip install -r requirements.txt
 ```
 
+## Download dataset
+
+```shell
+git submodule update --init --recursive
+```
+
 ## Fix issues of langchain-experimental
 
 edit line 551 of **<path/to/site-packages>/langchain_experimental/graph_transformers/llm.py** to change the code from
