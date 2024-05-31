@@ -8,6 +8,7 @@ from langchain.agents.output_parsers import ReActJsonSingleInputOutputParser
 from models import Llama3, CodeLlama
 from prompts import agent_template
 from tools import load_knowledge_graph, load_database
+import config
 
 class Agent(object):
   def __init__(self, model = 'llama3', tools = ["google-serper", "llm-math", "wikipedia", "arxiv"], locally = False):
@@ -17,7 +18,14 @@ class Agent(object):
       tokenizer, llm = CodeLlama(locally)
     else:
       raise Exception('unknown model!')
-    tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + [load_knowledge_graph(password = '19841124', locally = True), load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', locally = True)]
+    tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + \
+      [load_knowledge_graph(host = config.host,
+                            username = config.username,
+                            password = config.password,
+                            database = config.db,
+                            locally = config.run_locally),
+       load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db',
+                     locally = config.run_locally)]
     prompt = agent_template(tokenizer, tools)
     llm = llm.bind(stop = ["<|eot_id|>"])
     chain = {"input": lambda x: x["input"], "agent_scratchpad": lambda x: format_log_to_str(x["intermediate_steps"])} | prompt | llm | ReActJsonSingleInputOutputParser()
