@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+huggingface_token = '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'
+
 # aura db
 neo4j_host = "neo4j+s://ce5c573a.databases.neo4j.io:7687"
 neo4j_username = "neo4j"

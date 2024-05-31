@@ -5,9 +5,10 @@ from huggingface_hub import login
 from transformers import AutoTokenizer
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+import config
 
 def Llama3(locally = False):
-  login(token = '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')
+  login(token = config.huggingface_token)
   tokenizer = AutoTokenizer.from_pretrained('meta-llama/Meta-Llama-3-8B-Instruct')
   if locally:
     llm = HuggingFacePipeline.from_model_id(
@@ -25,7 +26,7 @@ def Llama3(locally = False):
       }
     )
   else:
-    environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
+    environ['HUGGINGFACEHUB_API_TOKEN'] = config.huggingface_token
     llm = HuggingFaceEndpoint(
       endpoint_url = "meta-llama/Meta-Llama-3-8B-Instruct",
       task = "text-generation",
@@ -39,7 +40,7 @@ def Llama3(locally = False):
   return tokenizer, llm
 
 def CodeLlama(locally = False):
-  login(token = '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')
+  login(token = config.huggingface_token)
   tokenizer = AutoTokenizer.from_pretrained('meta-llama/CodeLlama-7b-Instruct-hf')
   if locally:
     llm = HuggingFacePipeline.from_model_id(
@@ -56,7 +57,7 @@ def CodeLlama(locally = False):
       }
     )
   else:
-    environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
+    environ['HUGGINGFACEHUB_API_TOKEN'] = config.huggingface_token
     llm = HuggingFaceEndpoint(
       endpoint_url = 'meta-llama/CodeLlama-7b-Instruct-hf',
       task = 'text-generation',
