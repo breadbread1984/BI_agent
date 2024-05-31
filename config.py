@@ -14,5 +14,5 @@ password = "neo4j"
 db = "neo4j"
 #'''
 
-run_locally = False
+run_locally = True
 
