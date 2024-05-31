@@ -4,12 +4,11 @@ import time
 from absl import flags, app
 import gradio as gr
 from agent import Agent
+import config
 
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_string('host', default = '0.0.0.0', help = 'host address')
-  flags.DEFINE_integer('port', default = 8081, help = 'port number')
   flags.DEFINE_enum('model', default = 'llama3', enum_values = {'llama3', 'codellama'}, help = 'model to use')
 
 def main(unused_argv):
@@ -33,7 +32,7 @@ def main(unused_argv):
           clear_btn = gr.ClearButton(components = [chatbot], value = "清空问题")
       submit_btn.click(query, inputs = [msg, chatbot], outputs = [msg, chatbot])
   gr.close_all()
-  demo.launch(server_name = FLAGS.host, server_port = FLAGS.port)
+  demo.launch(server_name = config.service_host, server_port = config.service_port)
 
 if __name__ == "__main__":
   add_options()

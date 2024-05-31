@@ -19,10 +19,10 @@ class Agent(object):
     else:
       raise Exception('unknown model!')
     tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + \
-      [load_knowledge_graph(host = config.host,
-                            username = config.username,
-                            password = config.password,
-                            database = config.db,
+      [load_knowledge_graph(host = config.neo4j_host,
+                            username = config.neo4j_username,
+                            password = config.neo4j_password,
+                            database = config.neo4j_db,
                             locally = config.run_locally),
        load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db',
                      locally = config.run_locally)]

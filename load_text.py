@@ -19,7 +19,7 @@ def add_options():
 
 def main(unused_argv):
   tokenizer, llm = Llama3(config.run_locally)
-  neo4j = Neo4jGraph(url = config.host, username = config.username, password = config.password, database = config.db)
+  neo4j = Neo4jGraph(url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db)
   # 1) load text into list
   docs = list()
   for root, dirs, files in tqdm(walk(FLAGS.doc_dir)):
