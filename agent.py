@@ -11,11 +11,11 @@ from tools import load_knowledge_graph, load_database
 import config
 
 class Agent(object):
-  def __init__(self, model = 'llama3', tools = ["google-serper", "llm-math", "wikipedia", "arxiv"], locally = False):
+  def __init__(self, model = 'llama3', tools = ["google-serper", "llm-math", "wikipedia", "arxiv"]):
     if model == 'llama3':
-      tokenizer, llm = Llama3(locally)
+      tokenizer, llm = Llama3(config.run_locally)
     elif model == 'codellama':
-      tokenizer, llm = CodeLlama(locally)
+      tokenizer, llm = CodeLlama(config.run_locally)
     else:
       raise Exception('unknown model!')
     tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + \
