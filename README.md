@@ -92,6 +92,6 @@ result = self.database.run(sql_cmd)
 ## load prospectus
 
 ```shell
-python3 load_text.py --doc_dir bs_challenge_financial_14b_dataset/pdf_txt_file/ --password <password/of/neo4j>
+python3 load_text.py --doc_dir bs_challenge_financial_14b_dataset/pdf_txt_file/
 ```
 
