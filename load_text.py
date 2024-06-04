@@ -7,6 +7,8 @@ from os.path import splitext, join
 from langchain_community.document_loaders import UnstructuredPDFLoader, TextLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.graphs import Neo4jGraph
+from langchain.vectorstores import Neo4jVector
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_experimental.graph_transformers.llm import LLMGraphTransformer
 from prompts import extract_triplets_template
 from models import Llama3
@@ -19,7 +21,13 @@ def add_options():
 
 def main(unused_argv):
   tokenizer, llm = Llama3(config.run_locally)
-  neo4j = Neo4jGraph(url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db)
+  if config.unstructure_method == 'RAG':
+    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    neo4j = Neo4jVector(embedding = embedding, url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, index_name = "typical_rag")
+  elif config.unstructure_method == 'KG':
+    neo4j = Neo4jGraph(url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db)
+  else:
+    raise Exception('unknown unstructure method!')
   # 1) load text into list
   docs = list()
   for root, dirs, files in tqdm(walk(FLAGS.doc_dir)):
@@ -36,18 +44,25 @@ def main(unused_argv):
       docs.extend(loader.load())
   # 2) split pages into chunks and save to split_docs
   print('split pages into chunks')
-  text_splitter = RecursiveCharacterTextSplitter(chunk_size = 50, chunk_overlap = 25)
+  text_splitter = RecursiveCharacterTextSplitter(chunk_size = 500 if config.unstructure_method == 'RAG' else 50, chunk_overlap = 150 if config.unstructure_method == 'RAG' else 25)
   split_docs = text_splitter.split_documents(docs)
   # 3) erase content of neo4j
   neo4j.query('match (a)-[r]-(b) delete a,r,b')
-  # 4) extract triplets from documents
-  print('extract triplets from documents')
-  prompt, _ = extract_triplets_template(tokenizer)
-  graph = LLMGraphTransformer(
-            llm = llm,
-            prompt = prompt
-          ).convert_to_graph_documents(split_docs)
-  neo4j.add_graph_documents(graph)
+  if config.unstructure_method == 'RAG':
+    vectordb = neo4j.from_documents(
+        documents = split_docs,
+        embedding = embedding,
+        search_type = "hybrid"
+    )
+  elif config.unstructure_method == 'KG':
+    # 4) extract triplets from documents
+    print('extract triplets from documents')
+    prompt, _ = extract_triplets_template(tokenizer)
+    graph = LLMGraphTransformer(
+        llm = llm,
+        prompt = prompt
+    ).convert_to_graph_documents(split_docs)
+    neo4j.add_graph_documents(graph)
 
 if __name__ == "__main__":
   add_options()
