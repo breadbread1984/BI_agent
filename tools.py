@@ -7,12 +7,78 @@ from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
+from langchain.vectorstores import Neo4jVector
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt
 from models import Llama3, CodeLlama
+
+def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', locally = False):
+  class ProspectusInput(BaseModel):
+    query: str = Field(description = "招股说明书相关的问题")
+
+  class ProspectusConfig(BaseModel):
+    class Config:
+      arbitrary_types_allowed = True
+    retriever: VectorStoreRetriever
+
+  class ProspectusTool(BaseModel):
+    name = "招股说明书"
+    description = "当你有招股说明书相关问题，可以调用这个工具"
+    args_schema: Type[BaseModel] = ProspectusInput
+    return_direct: bool = True
+    config: ProspectusConfig
+    def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+      # TODO
+
+  vectordb = Neo4jVector(
+    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+    url = host, username = username, password = password, database = database,
+    index_name = "typical_rag"
+  )
+  parent_vectordb = Neo4jVector(
+    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+    url = host, username = username, password = password, database = database,
+    retrieval_query = """
+    MATCH (node)<-[:HAS_CHILD]-(parent)
+    WITH parent, max(score) AS score // deduplicate parents
+    RETURN parent.text AS text, score, {} AS metadata LIMIT 1
+    """,
+    index_name = "parent_document"
+  )
+  hypothetic_question_vectordb = Neo4jVector(
+    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+    url = host, username = username, password = password, database = database,
+    retrieval_query = """
+    MATCH (node)<-[:HAS_QUESTION]-(parent)
+    WITH parent, max(score) AS score // deduplicate parents
+    RETURN parent.text AS text, score, {} AS metadata
+    """,
+    index_name = "hypothetic_question_query"
+  )
+  summary_vectordb = Neo4jVector(
+    embedding = HuggingFaceEmebeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+    url = host, username = username, password = password, database = database,
+    retrieval_query = """
+    MATCH (node)<-[:HAS_SUMMARY]-(parent)
+    WITH parent, max(score) AS score // deduplicate parents
+    RETURN parent.text AS text, score, {} AS metadata
+    """,
+    index_name = "summary"
+  )
+
+  return ProspectusTool(config = ProspectusConfig(
+    retriever = vectordb.as_retriever().configurable_alternatives(
+      ConfigurableField(id = "strategy"),
+      default_key = "typical_rag",
+      parent_strategy = parent_vectordb.as_triever(),
+      hypothetical_questions = hypothetic_question_vectordb.as_triever(),
+      summary_strategy = summary_vectordb.as_triever()
+    )
+  ))
 
 def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j', locally = False):
   class ProspectusInput(BaseModel):
