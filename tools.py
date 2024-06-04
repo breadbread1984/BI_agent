@@ -10,7 +10,7 @@ from langchain.graphs import Neo4jGraph
 from langchain.vectorstores import Neo4jVector
 from langchain.memory import ChatMessageHistory
 from langchain.schema import AIMessage, HumanMessage
-from langchain_core.vectorstores import VectorStoreRetriever
+from langchain_core.runnables.configurable import RunnableConfigurableAlternatives
 from langchain.schema.runnable import ConfigurableField, RunnablePassthrough
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
@@ -28,9 +28,9 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     class Config:
       arbitrary_types_allowed = True
     neo4j: Neo4jGraph
-    retriever: VectorStoreRetriever
+    retriever: RunnableConfigurableAlternatives
 
-  class ProspectusTool(BaseModel):
+  class ProspectusTool(BaseTool):
     name = "招股说明书"
     description = "当你有招股说明书相关问题，可以调用这个工具"
     args_schema: Type[BaseModel] = ProspectusInput
@@ -134,7 +134,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
           params = input
       )
       return input["output"]
-    def _run(self, question:str, user_id: str, session_id: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+    def _run(self, query:str, user_id: str, session_id: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
       chain = {'question': question, 'user_id': user_id, 'session_id': session_id} | self.get_vector_history
       chat_history = chain.invoke()
       print(chat_history)
@@ -280,5 +280,5 @@ if __name__ == "__main__":
   '''
   # 3) test rag
   rag = load_vectordb(password = '19841124')
-  res = rag.invoke({'question': '请查询在2021年度，688338股票涨停天数？'})
+  res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': 0, 'session_id': 0})
 
