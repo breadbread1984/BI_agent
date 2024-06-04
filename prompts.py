@@ -212,7 +212,7 @@ Make sure to include all the relevant information.
 Chat History:
 %s
 Follow Up Input: {question}
-Standalone question:""" % '\n'.[chat['role'] + ': ' + chat['content'] for chat in chat_history]
+Standalone question:""" % '\n'.join([chat['role'] + ': ' + chat['content'] for chat in chat_history])
   messages = [
     {'role': 'user', 'content': condense_template}
   ]
