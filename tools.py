@@ -173,9 +173,9 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     retriever = vectordb.as_retriever().configurable_alternatives(
       ConfigurableField(id = "strategy"),
       default_key = "typical_rag",
-      parent_strategy = parent_vectordb.as_triever(),
+      parent_strategy = parent_vectordb.as_retriever(),
       hypothetical_questions = hypothetic_question_vectordb.as_triever(),
-      summary_strategy = summary_vectordb.as_triever()
+      summary_strategy = summary_vectordb.as_retriever()
     )
   ))
 
