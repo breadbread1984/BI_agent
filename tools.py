@@ -145,13 +145,12 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       chain = condense_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
       rephrased_question = chain.invoke({'question': query})
       # 2) retrieve context from neo4j
-      chain = {'question': RunnablePassthrough()} | self.config.retriever
-      context = chain.invoke({'question': rephrased_question})
+      context = self.config.retriever.invoke(rephrased_question)
       # 3) do rag
       #chain = {'context': self.config.retriever, 'question': RunnablePassthrough()} | rag_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
       chain = {'context': context, 'question': RunnablePassthrough()} | rag_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
       response = chain.invoke({'question': rephrased_question})
-      # 3) save question and answer to history
+      # 4) save question and answer to history
       self.save_vector_history({'context': context, 'chat_history': chat_history, 'rephrased_question': rephrased_question, 'output': response, 'user_id': user_id, 'session_id': session_id})
       return response
 
