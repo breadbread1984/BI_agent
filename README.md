@@ -8,6 +8,7 @@ this project is to solve the challenge post at [tianchi challenge](https://tianc
 
 ```shell
 python3 -m pip install -r requirements.txt
+langchain app add neo4j-advanced-rag
 ```
 
 ## Download dataset
