@@ -21,13 +21,8 @@ def add_options():
 
 def main(unused_argv):
   tokenizer, llm = Llama3(config.run_locally)
-  if config.unstructure_method == 'RAG':
-    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    neo4j = Neo4jVector(embedding = embedding, url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, index_name = "typical_rag")
-  elif config.unstructure_method == 'KG':
+  if config.unstructure_method == 'KG':
     neo4j = Neo4jGraph(url = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db)
-  else:
-    raise Exception('unknown unstructure method!')
   # 1) load text into list
   docs = list()
   for root, dirs, files in tqdm(walk(FLAGS.doc_dir)):
@@ -48,14 +43,21 @@ def main(unused_argv):
   split_docs = text_splitter.split_documents(docs)
   # 3) erase content of neo4j
   neo4j.query('match (a)-[r]-(b) delete a,r,b')
+  # 4) extract triplets from documents
   if config.unstructure_method == 'RAG':
-    vectordb = neo4j.from_documents(
+    print('extract embedding from document trunks')
+    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    vectordb = Neo4jVector.from_documents(
         documents = split_docs,
         embedding = embedding,
+        url = config.neo4j_host,
+        username = config.neo4j_username,
+        password = config.neo4j_password,
+        database = config.neo4j_db,
+        index_name = "typical_rag",
         search_type = "hybrid"
     )
   elif config.unstructure_method == 'KG':
-    # 4) extract triplets from documents
     print('extract triplets from documents')
     prompt, _ = extract_triplets_template(tokenizer)
     graph = LLMGraphTransformer(
