@@ -7,7 +7,7 @@ from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import ReActJsonSingleInputOutputParser
 from models import Llama3, CodeLlama
 from prompts import agent_template
-from tools import load_knowledge_graph, load_database
+from tools import load_vectordb, load_knowledge_graph, load_database
 import config
 
 class Agent(object):
