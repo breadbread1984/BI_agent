@@ -16,6 +16,8 @@ neo4j_password = "neo4j"
 neo4j_db = "neo4j"
 #'''
 
+unstructure_method = "RAG" # "RAG" or "KG"
+
 run_locally = True
 
 service_host = "0.0.0.0"
