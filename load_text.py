@@ -41,9 +41,7 @@ def main(unused_argv):
   print('split pages into chunks')
   text_splitter = RecursiveCharacterTextSplitter(chunk_size = 500 if config.unstructure_method == 'RAG' else 50, chunk_overlap = 150 if config.unstructure_method == 'RAG' else 25)
   split_docs = text_splitter.split_documents(docs)
-  # 3) erase content of neo4j
-  neo4j.query('match (a)-[r]-(b) delete a,r,b')
-  # 4) extract triplets from documents
+  # 3) extract triplets from documents
   if config.unstructure_method == 'RAG':
     print('extract embedding from document trunks')
     embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
@@ -60,6 +58,7 @@ def main(unused_argv):
     )
   elif config.unstructure_method == 'KG':
     print('extract triplets from documents')
+    neo4j.query('match (a)-[r]-(b) delete a,r,b')
     prompt, _ = extract_triplets_template(tokenizer)
     graph = LLMGraphTransformer(
         llm = llm,
