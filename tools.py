@@ -125,20 +125,16 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
               (s)-[:LAST_MESSAGE]->(q)
           DELETE l)
           """,
-          params = input)
+          params = input
+      )
       return input["output"]
     def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
       # TODO
 
   neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
-  vectordb = Neo4jVector(
-    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
-    url = host, username = username, password = password, database = database,
-    index_name = "typical_rag"
-  )
-  parent_vectordb = Neo4jVector(
-    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
-    url = host, username = username, password = password, database = database,
+  embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+  vectordb = Neo4jVector(embedding = embedding, url = host, username = username, password = password, database = database, index_name = "typical_rag")
+  parent_vectordb = Neo4jVector(embedding = embedding, url = host, username = username, password = password, database = database,
     retrieval_query = """
     MATCH (node)<-[:HAS_CHILD]-(parent)
     WITH parent, max(score) AS score // deduplicate parents
@@ -146,9 +142,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     """,
     index_name = "parent_document"
   )
-  hypothetic_question_vectordb = Neo4jVector(
-    embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
-    url = host, username = username, password = password, database = database,
+  hypothetic_question_vectordb = Neo4jVector(embedding = embedding, url = host, username = username, password = password, database = database,
     retrieval_query = """
     MATCH (node)<-[:HAS_QUESTION]-(parent)
     WITH parent, max(score) AS score // deduplicate parents
@@ -156,9 +150,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     """,
     index_name = "hypothetic_question_query"
   )
-  summary_vectordb = Neo4jVector(
-    embedding = HuggingFaceEmebeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
-    url = host, username = username, password = password, database = database,
+  summary_vectordb = Neo4jVector(embedding = embedding, url = host, username = username, password = password, database = database,
     retrieval_query = """
     MATCH (node)<-[:HAS_SUMMARY]-(parent)
     WITH parent, max(score) AS score // deduplicate parents
