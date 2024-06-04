@@ -15,7 +15,7 @@ from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
-from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt
+from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt, condense_template, rag_template
 from models import Llama3, CodeLlama
 
 def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', locally = False):
@@ -35,12 +35,12 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     return_direct: bool = True
     config: ProspectusConfig
     def convert_messages(self, input: List[Dict[str, Any]]) -> ChatMessageHistory:
-      history = ChatMessageHistory()
+      history = list()
       for item in input:
-          history.add_user_message(item["result"]["question"])
-          history.add_ai_message(item["result"]["answer"])
+          history.append({'role': 'user', 'content': item['result']['question']})
+          history.append({'role': 'assistant', 'content': item["result"]["answer"]})
       return history
-    def get_vector_history(self, input: Dict[str, Any]) -> List[Union[HumanMessage, AIMessage]]:
+    def get_vector_history(self, input: Dict[str, Any]) -> List[Dict[str, str]]:
       window = 3
       data = self.neo4j.query("""
           MATCH (u:User {id:$user_id})-[:HAS_SESSION]->(s:Session {id:$session_id}),
@@ -132,8 +132,11 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
           params = input
       )
       return input["output"]
-    def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
-      # TODO
+    def _run(self, question:str, user_id: str, session_id: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+      chain = {'question': question, 'user_id': user_id, 'session_id': session_id} | self.get_vector_history
+      chat_history = chain.invoke()
+      print(chat_history)
+      return chat_history
 
   neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
   embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
@@ -265,7 +268,6 @@ if __name__ == "__main__":
   print(res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
-  '''
   # 2) test sql base
   db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', locally = True)
   print('name:', db.name)
@@ -273,3 +275,8 @@ if __name__ == "__main__":
   print('args:', db.args)
   res = db.invoke({'query': '请查询在2021年度，688338股票涨停天数？'})
   print(res)
+  '''
+  # 3) test rag
+  rag = load_vectordb(password = '19841124')
+  res = rag.invoke({'question': '请查询在2021年度，688338股票涨停天数？'})
+

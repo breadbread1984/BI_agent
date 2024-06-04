@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from typing import Dict, List
 from langchain import hub
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field, create_model
@@ -204,3 +205,32 @@ Question: {input}"""
   prompt = tokenizer.apply_chat_template(messages, tokenize = False, add_generation_prompt = True)
   template = PromptTemplate(template = prompt, input_variables = ['input', 'table_info', 'top_k'])
   return template
+
+def condense_template(tokenizer, chat_history: List[Dict[str,str]]):
+  condense_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+Make sure to include all the relevant information.
+Chat History:
+%s
+Follow Up Input: {question}
+Standalone question:""" % '\n'.[chat['role'] + ': ' + chat['content'] for chat in chat_history]
+  messages = [
+    {'role': 'user', 'content': condense_template}
+  ]
+  prompt = tokenizer.apply_chat_template(messages, tokenize = False, add_generation_prompt = True)
+  template = PromptTemplate(template = prompt, input_variables = ['question'])
+  return template
+
+def rag_template(tokenizer, chat_history: List[Dict[str,str]]):
+  answer_template = """Answer the question based only on the following context:
+<context>
+{context}
+</context>"""
+  messages = [
+    {'role': 'system', 'content': answer_template},
+    *chat_history,
+    {'role': 'user', 'content': "{question}"}
+  ]
+  prompt = tokenizer.apply_chat_template(messages, tokenize = False, add_generation_prompt = True)
+  template = PromptTemplate(template = prompt, input_variables = ['context', 'question'])
+  return template
+
