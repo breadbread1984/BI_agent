@@ -57,6 +57,10 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       history = self.convert_messages(data)
       return history.messages
     def save_vector_history(self, input: Dict[str, Any]) -> str:
+      # (User)-[HAS_SESSION]->(Session)-[LAST_MESSAGE]->(Question)-[HAS_ANSWER]->(Answer)
+      #                                                 (Question)-[NEXT]->(Question)
+      #                                                 (Question)-[RETRIEVED]->()
+      # LAST_MESSAGE always points to the last Question
       input["context"] = [el.page_content for el in input['context']]
       has_history = bool(input.pop('chat_history'))
       if has_history:
