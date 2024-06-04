@@ -39,15 +39,13 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       data = self.neo4j.query("""
           MATCH (u:User {id:$user_id})-[:HAS_SESSION]->(s:Session {id:$session_id}),
               (s)-[:LAST_MESSAGE]->(last_message)
-          MATCH p=(last_message)<-[:NEXT*0.."""
-              + str(window)
-              + """]-()
+          MATCH p=(last_message)<-[:NEXT*0..%d]-()
           WITH p, length(p) AS length
           ORDER BY length DESC LIMIT 1
           UNWIND reverse(nodes(p)) AS node
           MATCH (node)-[:HAS_ANSWER]->(answer)
           RETURN {question:node.text, answer:answer.text} AS result
-      """)
+      """ % window)
     def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
       # TODO
 
