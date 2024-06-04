@@ -2,12 +2,14 @@
 
 from os import environ, remove
 from os.path import exists, join, isdir
-from typing import Optional, Type
+from typing import Optional, Type, List, Dict, Union, Any
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
 from langchain.vectorstores import Neo4jVector
+from langchain.memory import ChatMessageHistory
+from langchain.schema import AIMessage, HumanMessage
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
@@ -23,6 +25,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
   class ProspectusConfig(BaseModel):
     class Config:
       arbitrary_types_allowed = True
+    neo4j: Neo4jGraph
     retriever: VectorStoreRetriever
 
   class ProspectusTool(BaseModel):
@@ -31,9 +34,24 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     args_schema: Type[BaseModel] = ProspectusInput
     return_direct: bool = True
     config: ProspectusConfig
+    def get_vector_history(self, input: Dict[str, Any]) -> List[Union[HumanMessage, AIMessage]]:
+      window = 3
+      data = self.neo4j.query("""
+          MATCH (u:User {id:$user_id})-[:HAS_SESSION]->(s:Session {id:$session_id}),
+              (s)-[:LAST_MESSAGE]->(last_message)
+          MATCH p=(last_message)<-[:NEXT*0.."""
+              + str(window)
+              + """]-()
+          WITH p, length(p) AS length
+          ORDER BY length DESC LIMIT 1
+          UNWIND reverse(nodes(p)) AS node
+          MATCH (node)-[:HAS_ANSWER]->(answer)
+          RETURN {question:node.text, answer:answer.text} AS result
+      """)
     def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
       # TODO
 
+  neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
   vectordb = Neo4jVector(
     embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
     url = host, username = username, password = password, database = database,
@@ -71,6 +89,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
   )
 
   return ProspectusTool(config = ProspectusConfig(
+    neo4j = neo4j,
     retriever = vectordb.as_retriever().configurable_alternatives(
       ConfigurableField(id = "strategy"),
       default_key = "typical_rag",
