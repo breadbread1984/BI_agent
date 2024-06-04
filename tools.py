@@ -10,6 +10,7 @@ from langchain.graphs import Neo4jGraph
 from langchain.vectorstores import Neo4jVector
 from langchain.memory import ChatMessageHistory
 from langchain.schema import AIMessage, HumanMessage
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
