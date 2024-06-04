@@ -34,6 +34,12 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     args_schema: Type[BaseModel] = ProspectusInput
     return_direct: bool = True
     config: ProspectusConfig
+    def convert_messages(self, input: List[Dict[str, Any]]) -> ChatMessageHistory:
+      history = ChatMessageHistory()
+      for item in input:
+          history.add_user_message(item["result"]["question"])
+          history.add_ai_message(item["result"]["answer"])
+      return history
     def get_vector_history(self, input: Dict[str, Any]) -> List[Union[HumanMessage, AIMessage]]:
       window = 3
       data = self.neo4j.query("""
@@ -45,7 +51,82 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
           UNWIND reverse(nodes(p)) AS node
           MATCH (node)-[:HAS_ANSWER]->(answer)
           RETURN {question:node.text, answer:answer.text} AS result
-      """ % window)
+          """ % window,
+          params = input
+      )
+      history = self.convert_messages(data)
+      return history.messages
+    def save_vector_history(self, input: Dict[str, Any]) -> str:
+      input["context"] = [el.page_content for el in input['context']]
+      has_history = bool(input.pop('chat_history'))
+      if has_history:
+          self.config.neo4j.query("""
+              MATCH (u:User {id: $user_id})-[:HAS_SESSION]->(s:Session{id: $session_id}),
+                  (s)-[l:LAST_MESSAGE]->(last_message)
+              CREATE (last_message)-[:NEXT]->(q:Question 
+                  {text:$question, rephrased:$rephrased_question, date:datetime()}),
+                  (q)-[:HAS_ANSWER]->(:Answer {text:$output}),
+                  (s)-[:LAST_MESSAGE]->(q)
+              DELETE l
+              WITH q
+              UNWIND $context AS c
+              MATCH (n) WHERE elementId(n) = c
+              MERGE (q)-[:RETRIEVED]->(n)
+              """,
+              params = input
+          )
+      else:
+          self.config.neo4j.query("""
+              MERGE (u:User {id: $user_id})
+              CREATE (u)-[:HAS_SESSION]->(s1:Session {id:$session_id}),
+                  (s1)-[:LAST_MESSAGE]->(q:Question 
+                      {text:$question, rephrased:$rephrased_question, date:datetime()}),
+                  (q)-[:HAS_ANSWER]->(:Answer {text:$output})
+              WITH q
+              UNWIND $context AS c
+              MATCH (n) WHERE elementId(n) = c
+              MERGE (q)-[:RETRIEVED]->(n)
+              """,
+              params = input
+          )
+      return input["output"]
+    def get_graph_history(self, input: Dict[str, Any]) -> ChatMessageHistory:
+      input.pop("question")
+      window = 3
+      data = self.config.neo4j.query("""
+          MATCH (u:User {id:$user_id})-[:HAS_SESSION]->(s:Session {id:$session_id}),
+              (s)-[:LAST_MESSAGE]->(last_message)
+          MATCH p=(last_message)<-[:NEXT*0..%d]-()
+          WITH p, length(p) AS length
+          ORDER BY length DESC LIMIT 1
+          UNWIND reverse(nodes(p)) AS node
+          MATCH (node)-[:HAS_ANSWER]->(answer)
+          RETURN {question:node.text, answer:answer.text} AS result
+          """ % window,
+          params = input
+      )
+      history = self.convert_messages(data)
+      return history.messages
+    def save_graph_history(self, input):
+      input.pop("response")
+      self.config.neo4j.query("""
+          MERGE (u:User {id: $user_id})
+          WITH u
+          OPTIONAL MATCH (u)-[:HAS_SESSION]->(s:Session{id: $session_id}),
+              (s)-[l:LAST_MESSAGE]->(last_message)
+          FOREACH (_ IN CASE WHEN last_message IS NULL THEN [1] ELSE [] END |
+          CREATE (u)-[:HAS_SESSION]->(s1:Session {id:$session_id}),
+              (s1)-[:LAST_MESSAGE]->(q:Question {text:$question, cypher:$query, date:datetime()}),
+                  (q)-[:HAS_ANSWER]->(:Answer {text:$output}))                                
+          FOREACH (_ IN CASE WHEN last_message IS NOT NULL THEN [1] ELSE [] END |
+          CREATE (last_message)-[:NEXT]->(q:Question 
+              {text:$question, cypher:$query, date:datetime()}),
+              (q)-[:HAS_ANSWER]->(:Answer {text:$output}),
+              (s)-[:LAST_MESSAGE]->(q)
+          DELETE l)
+          """,
+          params = input)
+      return input["output"]
     def _run(self, query:str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
       # TODO
 
