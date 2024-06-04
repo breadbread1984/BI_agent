@@ -55,7 +55,8 @@ def main(unused_argv):
         password = config.neo4j_password,
         database = config.neo4j_db,
         index_name = "typical_rag",
-        search_type = "hybrid"
+        search_type = "hybrid",
+        pre_delete_collection = True
     )
   elif config.unstructure_method == 'KG':
     print('extract triplets from documents')
