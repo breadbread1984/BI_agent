@@ -9,9 +9,9 @@ from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
 from langchain.vectorstores import Neo4jVector
 from langchain.memory import ChatMessageHistory
-from langchain.schema import AIMessage, HumanMessage
 from langchain_core.runnables.configurable import RunnableConfigurableAlternatives
 from langchain.schema.runnable import ConfigurableField, RunnablePassthrough
+from langchain.schema.output_parser import StrOutputParser
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
@@ -23,12 +23,16 @@ from models import Llama3, CodeLlama
 def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', locally = False):
   class ProspectusInput(BaseModel):
     query: str = Field(description = "招股说明书相关的问题")
+    user_id: str = Field(description = '用户编号')
+    session_id: str = Field(description = '会话编号')
 
   class ProspectusConfig(BaseModel):
     class Config:
       arbitrary_types_allowed = True
     neo4j: Neo4jGraph
     retriever: RunnableConfigurableAlternatives
+    tokenizer: PreTrainedTokenizerFast
+    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
 
   class ProspectusTool(BaseTool):
     name = "招股说明书"
@@ -44,7 +48,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       return history
     def get_vector_history(self, input: Dict[str, Any]) -> List[Dict[str, str]]:
       window = 3
-      data = self.neo4j.query("""
+      data = self.config.neo4j.query("""
           MATCH (u:User {id:$user_id})-[:HAS_SESSION]->(s:Session {id:$session_id}),
               (s)-[:LAST_MESSAGE]->(last_message)
           MATCH p=(last_message)<-[:NEXT*0..%d]-()
@@ -57,7 +61,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
           params = input
       )
       history = self.convert_messages(data)
-      return history.messages
+      return history
     def save_vector_history(self, input: Dict[str, Any]) -> str:
       # (User)-[HAS_SESSION]->(Session)-[LAST_MESSAGE]->(Question)-[HAS_ANSWER]->(Answer)
       #                                                 (Question)-[NEXT]->(Question)
@@ -135,10 +139,21 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       )
       return input["output"]
     def _run(self, query:str, user_id: str, session_id: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
-      chain = {'question': question, 'user_id': user_id, 'session_id': session_id} | self.get_vector_history
-      chat_history = chain.invoke()
-      print(chat_history)
-      return chat_history
+      # rephrase question into a standalone question base on chat history
+      # 1) to make the question is answerable without history
+      chat_history = self.get_vector_history({'question': query, 'user_id': user_id, 'session_id': session_id})
+      chain = condense_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
+      rephrased_question = chain.invoke({'question': query})
+      # 2) retrieve context from neo4j
+      chain = {'question': RunnablePassthrough()} | self.config.retriever
+      context = chain.invoke({'question': rephrased_question})
+      # 3) do rag
+      #chain = {'context': self.config.retriever, 'question': RunnablePassthrough()} | rag_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
+      chain = {'context': context, 'question': RunnablePassthrough()} | rag_template(self.config.tokenizer, chat_history) | self.config.llm | StrOutputParser()
+      response = chain.invoke({'question': rephrased_question})
+      # 3) save question and answer to history
+      self.save_vector_history({'context': context, 'chat_history': chat_history, 'rephrased_question': rephrased_question, 'output': response, 'user_id': user_id, 'session_id': session_id})
+      return response
 
   neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
   embedding = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
@@ -167,6 +182,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     """,
     index_name = "summary"
   )
+  tokenizer, llm = Llama3(locally = locally)
 
   return ProspectusTool(config = ProspectusConfig(
     neo4j = neo4j,
@@ -176,7 +192,9 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       parent_strategy = parent_vectordb.as_retriever(),
       hypothetical_questions = hypothetic_question_vectordb.as_retriever(),
       summary_strategy = summary_vectordb.as_retriever()
-    )
+    ),
+    tokenizer = tokenizer,
+    llm = llm
   ))
 
 def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j', locally = False):
@@ -280,5 +298,5 @@ if __name__ == "__main__":
   '''
   # 3) test rag
   rag = load_vectordb(password = '19841124')
-  res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': 0, 'session_id': 0})
+  res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': '0', 'session_id': '0'})
 
