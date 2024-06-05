@@ -19,7 +19,7 @@ neo4j_db = "experiments"
 
 unstructure_method = "RAG" # "RAG" or "KG"
 
-run_locally = True
+run_locally = False
 
 service_host = "0.0.0.0"
 service_port = 8081
