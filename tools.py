@@ -279,8 +279,8 @@ def load_database(sqlite_path, locally = False):
 if __name__ == "__main__":
   import config
   # 1) test knowledge graph
-  kb = load_knowledge_graph(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = True)
-  res = kb.invoke({'query': 'what is found in plant cells?'})
+  kb = load_knowledge_graph(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = False)
+  res = kb.invoke({'query': 'what are the nitrogenous bases?'})
   print('\n\n回复是：\n',res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
