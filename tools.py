@@ -277,16 +277,14 @@ def load_database(sqlite_path, locally = False):
   return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
 
 if __name__ == "__main__":
-  '''
+  import config
   # 1) test knowledge graph
-  kb = load_knowledge_graph(password = '19841124')
-  print('name:',kb.name)
-  print('description:', kb.description)
-  print('args:',kb.args)
-  res = kb.invoke({'query': 'what is the application of sodium chloride?'})
-  print(res)
+  kb = load_knowledge_graph(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = True)
+  res = kb.invoke({'query': 'what is found in plant cells?'})
+  print('\n\n回复是：\n',res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
+  '''
   # 2) test sql base
   db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', locally = True)
   print('name:', db.name)
@@ -294,8 +292,7 @@ if __name__ == "__main__":
   print('args:', db.args)
   res = db.invoke({'query': '请查询在2021年度，688338股票涨停天数？'})
   print(res)
-  '''
   # 3) test rag
-  rag = load_vectordb(password = '19841124')
+  rag = load_vectordb(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = True)
   res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': '0', 'session_id': '0'})
-
+  '''
