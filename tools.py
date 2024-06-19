@@ -18,7 +18,7 @@ from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, Callback
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt, condense_template, rag_template
-from models import Llama3, CodeLlama
+from models import Llama3, CodeLlama, Qwen2
 
 def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', locally = False):
   class ProspectusInput(BaseModel):
@@ -272,7 +272,7 @@ def load_database(sqlite_path, locally = False):
     async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
       raise NotImplementedError("DatabaseTool does not support async!")
 
-  tokenizer, llm = Llama3(locally)
+  tokenizer, llm = Qwen2(locally)
   db = SQLDatabase.from_uri('sqlite:///%s' % sqlite_path)
   return DatabaseTool(config = DatabaseConfig(db = db, tokenizer = tokenizer, llm = llm))
 
