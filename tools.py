@@ -20,7 +20,7 @@ from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt, condense_template, rag_template
 from models import Llama3, CodeLlama, Qwen2
 
-def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', locally = False, tokenizer = None, llm = None):
+def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', tokenizer = None, llm = None):
   class ProspectusInput(BaseModel):
     query: str = Field(description = "招股说明书相关的问题")
     user_id: str = Field(description = '用户编号')
@@ -195,7 +195,7 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     llm = llm
   ))
 
-def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j', locally = False, tokenizer = None, llm = None):
+def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', password = None, database = 'neo4j', tokenizer = None, llm = None):
   class ProspectusInput(BaseModel):
     query: str = Field(description = "招股说明书相关的问题")
 
@@ -246,7 +246,7 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
   neo4j = Neo4jGraph(url = host, username = username, password = password, database = database)
   return ProspectusTool(config = ProspectusConfig(neo4j = neo4j, tokenizer = tokenizer, llm = llm))
 
-def load_database(sqlite_path, locally = False, tokenizer = None, llm = None):
+def load_database(sqlite_path, tokenizer = None, llm = None):
   class DatabaseInput(BaseModel):
     query: str = Field(description = "需要询问的金融问题")
 

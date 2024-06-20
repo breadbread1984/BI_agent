@@ -30,4 +30,3 @@ langchain_experimental
 neo4j
 pillow_heif
 langchain-cli
-transformers_stream_generator
