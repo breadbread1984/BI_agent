@@ -11,19 +11,16 @@ from tools import load_vectordb, load_knowledge_graph, load_database
 import config
 
 class Agent(object):
-  def __init__(self, model = 'llama3', tools = ["google-serper", "llm-math", "wikipedia", "arxiv"]):
-    if model == 'llama3':
-      tokenizer, llm = Llama3(config.run_locally)
-    elif model == 'codellama':
-      tokenizer, llm = CodeLlama(config.run_locally)
-    elif model == 'qwen2':
-      tokenizer, llm = Qwen2(config.run_locally)
-    elif model == 'codeqwen':
-      tokenizer, llm = CodeQwen1_5(config.run_locally)
-    elif model == 'finance':
-      tokenizer, llm = Finance(config.run_locally)
-    else:
-      raise Exception('unknown model!')
+  def __init__(self, model = 'llama3', code_model = 'codellama' tools = ["google-serper", "llm-math", "wikipedia", "arxiv"]):
+    llms_types = {
+      'llama3': Llama3,
+      'codellama': CodeLlama,
+      'qwen2': Qwen2,
+      'codeqwen': CodeQwen1_5,
+      'finance': Finance
+    }
+    tokenizer, llm = llms_types[model](config.run_locally)
+    code_tokenizer, code_llm = llms_types[code_model](config.run_locally)
     unstructure_tool = load_vectordb(
                          host = config.neo4j_host,
                          username = config.neo4j_username,
@@ -43,8 +40,8 @@ class Agent(object):
     structure_tool = load_database(
                        'bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db',
                        locally = config.run_locally,
-                       tokenizer = tokenizer,
-                       llm = llm)
+                       tokenizer = code_tokenizer,
+                       llm = code_llm)
     tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + \
       [unstructure_tool, structure_tool]
     prompt = agent_template(tokenizer, tools)
