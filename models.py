@@ -80,8 +80,8 @@ def Qwen2(locally = False):
       pipeline_kwargs = {
         "max_length": 131072,
         "do_sample": False,
-        "temperature": 0.8,
-        "top_p": 0.8,
+        "temperature": 1,
+        "top_p": 1,
         "use_cache": True,
         "return_full_text": False
       }
@@ -93,8 +93,8 @@ def Qwen2(locally = False):
       task = 'text-generation',
       max_length = 131072,
       do_sample = False,
-      temperature = 0.8,
-      top_p = 0.8,
+      temperature = 1,
+      top_p = 1,
       use_cache = True
     )
   return tokenizer, llm
