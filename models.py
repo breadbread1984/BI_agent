@@ -123,7 +123,7 @@ def CodeQwen1_5(locally = False):
 
 def Finance(locally = False):
   login(token = config.huggingface_token)
-  tokenizer = AutoTokenizer.from_pretrained('jxy/Tongyi-Finance-14B-Chat')
+  tokenizer = AutoTokenizer.from_pretrained('jxy/Tongyi-Finance-14B-Chat', trust_remote_code = True)
   if locally:
     llm = HuggingFacePipeline.from_model_id(
       model_id = 'jxy/Tongyi-Finance-14B-Chat',
