@@ -30,12 +30,9 @@ def Llama3(locally = False):
     llm = HuggingFaceEndpoint(
       endpoint_url = "meta-llama/Meta-Llama-3-8B-Instruct",
       task = "text-generation",
-      #max_length = 8192,
       do_sample = False,
       temperature = 0.6,
       top_p = 0.9,
-      #eos_token_id = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")],
-      #use_cache = True,
     )
   return tokenizer, llm
 
@@ -61,7 +58,6 @@ def CodeLlama(locally = False):
     llm = HuggingFaceEndpoint(
       endpoint_url = 'meta-llama/CodeLlama-7b-Instruct-hf',
       task = 'text-generation',
-      #max_length = 16384,
       do_sample = False,
       temperature = 0.8,
       top_p = 0.8,
