@@ -93,7 +93,6 @@ def Qwen2(locally = False):
       task = 'text-generation',
       do_sample = False,
       temperature = 1,
-      top_p = 1,
-      use_cache = True
+      top_p = 1
     )
   return tokenizer, llm
