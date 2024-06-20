@@ -20,7 +20,10 @@ class Agent(object):
       'finance': Finance
     }
     tokenizer, llm = llms_types[model](config.run_locally)
-    code_tokenizer, code_llm = llms_types[code_model](config.run_locally)
+    if model == code_model:
+      code_tokenizer, code_llm = tokenizer, llm
+    else:
+      code_tokenizer, code_llm = llms_types[code_model](config.run_locally)
     unstructure_tool = load_vectordb(
                          host = config.neo4j_host,
                          username = config.neo4j_username,
