@@ -25,7 +25,7 @@ class Agent(object):
                          username = config.neo4j_username,
                          password = config.neo4j_password,
                          database = config.neo4j_db,
-                         locally = config.run_locally
+                         locally = config.run_locally,
                          tokenizer = tokenizer,
                          llm = llm) if config.unstructure_method == 'RAG' else \
                        load_knowledge_graph(
