@@ -18,7 +18,7 @@ from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, Callback
 from langchain import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
 from prompts import entity_generation_template, triplets_qa_template, sqlite_prompt, condense_template, rag_template
-from models import Llama3, CodeLlama, Qwen2
+from models import Llama3, CodeLlama, Qwen2, CodeQwen1_5
 
 def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password = None, database = 'neo4j', tokenizer = None, llm = None):
   class ProspectusInput(BaseModel):
@@ -275,21 +275,26 @@ def load_database(sqlite_path, tokenizer = None, llm = None):
 
 if __name__ == "__main__":
   import config
+  tokenizer, llm = CodeQwen(config.run_locally)
+  '''
   # 1) test knowledge graph
-  kb = load_knowledge_graph(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = False)
+  kb = load_knowledge_graph(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, tokenizer = tokenizer, llm = llm)
   res = kb.invoke({'query': 'what are the nitrogenous bases?'})
   print('\n\n回复是：\n',res)
   # NOTE: https://github.com/langchain-ai/langchain/discussions/15927
   kb.config.neo4j._driver.close()
+  #'''
   '''
   # 2) test sql base
-  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', locally = True)
+  db = load_database('bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db', tokenizer = tokenizer, llm = llm)
   print('name:', db.name)
   print('description:', db.description)
   print('args:', db.args)
   res = db.invoke({'query': '请查询在2021年度，688338股票涨停天数？'})
   print(res)
-  # 3) test rag
-  rag = load_vectordb(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, locally = True)
-  res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': '0', 'session_id': '0'})
+  #'''
   '''
+  # 3) test rag
+  rag = load_vectordb(host = config.neo4j_host, username = config.neo4j_username, password = config.neo4j_password, database = config.neo4j_db, tokenizer = tokenizer, llm = llm)
+  res = rag.invoke({'query': '请查询在2021年度，688338股票涨停天数？', 'user_id': '0', 'session_id': '0'})
+  #'''
