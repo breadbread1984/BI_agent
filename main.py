@@ -9,7 +9,7 @@ import config
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_enum('model', default = 'llama3', enum_values = {'llama3', 'codellama', 'qwen2'}, help = 'model to use')
+  flags.DEFINE_enum('model', default = 'codellama', enum_values = {'llama3', 'codellama', 'qwen2'}, help = 'model to use')
 
 def main(unused_argv):
   agent = Agent(FLAGS.model)
