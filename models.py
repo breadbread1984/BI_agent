@@ -95,10 +95,10 @@ def Qwen2(locally = False):
 
 def CodeQwen1_5(locally = False):
   login(token = config.huggingface_token)
-  tokenizer = AutoTokenizer.from_pretrained('Qwen/CodeQwen1.5-7B')
+  tokenizer = AutoTokenizer.from_pretrained('Qwen/CodeQwen1.5-7B-Chat')
   if locally:
     llm = HuggingFacePipeline.from_model_id(
-      model_id = 'Qwen/CodeQwen1.5-7B',
+      model_id = 'Qwen/CodeQwen1.5-7B-Chat',
       task = 'text-generation',
       device = 0,
       pipeline_kwargs = {
@@ -113,7 +113,7 @@ def CodeQwen1_5(locally = False):
   else:
     environ['HUGGINGFACEHUB_API_TOKEN'] = config.huggingface_token
     llm = HuggingFaceEndpoint(
-      endpoint_url = 'Qwen/CodeQwen1.5-7B',
+      endpoint_url = 'Qwen/CodeQwen1.5-7B-Chat',
       task = 'text-generation',
       do_sample = False,
       temperature = 0.8,
