@@ -11,7 +11,7 @@ from tools import load_vectordb, load_knowledge_graph, load_database
 import config
 
 class Agent(object):
-  def __init__(self, model = 'llama3', code_model = 'codellama' tools = ["google-serper", "llm-math", "wikipedia", "arxiv"]):
+  def __init__(self, model = 'llama3', code_model = 'codellama', tools = ["google-serper", "llm-math", "wikipedia", "arxiv"]):
     llms_types = {
       'llama3': Llama3,
       'codellama': CodeLlama,
