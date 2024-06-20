@@ -91,7 +91,6 @@ def Qwen2(locally = False):
     llm = HuggingFaceEndpoint(
       endpoint_url = 'Qwen/Qwen2-7B',
       task = 'text-generation',
-      max_length = 131072,
       do_sample = False,
       temperature = 1,
       top_p = 1,
