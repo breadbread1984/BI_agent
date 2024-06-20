@@ -9,8 +9,8 @@ import config
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_enum('model', default = 'codeqwen', enum_values = {'llama3', 'codellama', 'qwen2', 'codeqwen', 'finance'}, help = 'model to use')
-  flags.DEFINE_enum('code_model', default = 'codeqwen', enum_values = {'llama3', 'codellama', 'qwen2', 'codeqwen', 'finance'}, help = 'code generation model to use')
+  flags.DEFINE_enum('model', default = 'codeqwen', enum_values = {'llama3', 'codellama', 'qwen2', 'codeqwen', 'qwen1.5'}, help = 'model to use')
+  flags.DEFINE_enum('code_model', default = 'codeqwen', enum_values = {'llama3', 'codellama', 'qwen2', 'codeqwen', 'qwen1.5'}, help = 'code generation model to use')
 
 def main(unused_argv):
   agent = Agent(model = FLAGS.model, code_model = FLAGS.code_model)

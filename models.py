@@ -121,12 +121,12 @@ def CodeQwen1_5(locally = False):
     )
   return tokenizer, llm
 
-def Finance(locally = False):
+def Qwen1_5(locally = False):
   login(token = config.huggingface_token)
-  tokenizer = AutoTokenizer.from_pretrained('jxy/Tongyi-Finance-14B-Chat', trust_remote_code = True)
+  tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen1.5-14B-Chat')
   if locally:
     llm = HuggingFacePipeline.from_model_id(
-      model_id = 'jxy/Tongyi-Finance-14B-Chat',
+      model_id = 'Qwen/Qwen1.5-14B-Chat',
       task = 'text-generation',
       device = 0,
       pipeline_kwargs = {
@@ -136,17 +136,15 @@ def Finance(locally = False):
         "top_p": 0.8,
         "use_cache": True,
         "return_full_text": False,
-        "trust_remote_code": True,
       }
     )
   else:
     environ['HUGGINGFACEHUB_API_TOKEN'] = config.huggingface_token
     llm = HuggingFaceEndpoint(
-      endpoint_url = 'jxy/Tongyi-Finance-14B-Chat',
+      endpoint_url = 'Qwen/Qwen1.5-14B-Chat',
       task = 'text-generation',
       do_sample = False,
       temperature = 0.8,
       top_p = 0.8,
-      trust_remote_code = True,
     )
   return tokenizer, llm

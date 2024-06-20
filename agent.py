@@ -5,7 +5,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.agents import AgentExecutor, load_tools
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import ReActJsonSingleInputOutputParser
-from models import Llama3, CodeLlama, Qwen2, CodeQwen1_5, Finance
+from models import Llama3, CodeLlama, Qwen2, CodeQwen1_5, Qwen1_5
 from prompts import agent_template
 from tools import load_vectordb, load_knowledge_graph, load_database
 import config
@@ -17,7 +17,7 @@ class Agent(object):
       'codellama': CodeLlama,
       'qwen2': Qwen2,
       'codeqwen': CodeQwen1_5,
-      'finance': Finance
+      'qwen1.5': Qwen1_5,
     }
     tokenizer, llm = llms_types[model](config.run_locally)
     if model == code_model:
