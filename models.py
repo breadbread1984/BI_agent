@@ -135,7 +135,8 @@ def Finance(locally = False):
         "temperature": 0.8,
         "top_p": 0.8,
         "use_cache": True,
-        "return_full_text": False
+        "return_full_text": False,
+        "trust_remote_code": True,
       }
     )
   else:
@@ -146,5 +147,6 @@ def Finance(locally = False):
       do_sample = False,
       temperature = 0.8,
       top_p = 0.8,
+      trust_remote_code = True,
     )
   return tokenizer, llm
