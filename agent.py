@@ -5,7 +5,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.agents import AgentExecutor, load_tools
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import ReActJsonSingleInputOutputParser
-from models import Llama3, CodeLlama, Qwen2
+from models import Llama3, CodeLlama, Qwen2, CodeQwen1_5
 from prompts import agent_template
 from tools import load_vectordb, load_knowledge_graph, load_database
 import config
@@ -18,6 +18,8 @@ class Agent(object):
       tokenizer, llm = CodeLlama(config.run_locally)
     elif model == 'qwen2':
       tokenizer, llm = Qwen2(config.run_locally)
+    elif model == 'codeqwen':
+      tokenizer, llm = CodeQwen1_5(config.run_locally)
     else:
       raise Exception('unknown model!')
     unstructure_tool = load_vectordb(
