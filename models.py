@@ -130,7 +130,7 @@ def Qwen1_5(locally = False):
       task = 'text-generation',
       device = 0,
       pipeline_kwargs = {
-        "max_length": 16384,
+        "max_length": 32768,
         "do_sample": False,
         "temperature": 0.8,
         "top_p": 0.8,
