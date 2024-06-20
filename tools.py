@@ -3,7 +3,7 @@
 from os import environ, remove
 from os.path import exists, join, isdir
 from typing import Optional, Type, List, Dict, Union, Any
-from transformers import AutoTokenizer, PreTrainedTokenizerFast
+from transformers import AutoTokenizer, PreTrainedTokenizerFast, CodeLlamaTokenizer
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
@@ -31,8 +31,8 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
       arbitrary_types_allowed = True
     neo4j: Neo4jGraph
     retriever: RunnableConfigurableAlternatives
-    tokenizer: PreTrainedTokenizerFast
-    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
+    tokenizer: Union[PreTrainedTokenizerFast,CodeLlamaTokenizer]
+    llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class ProspectusTool(BaseTool):
     name = "招股说明书"
@@ -203,8 +203,8 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
     class Config:
       arbitrary_types_allowed = True
     neo4j: Neo4jGraph
-    tokenizer: PreTrainedTokenizerFast
-    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
+    tokenizer: Union[PreTrainedTokenizerFast,CodeLlamaTokenizer]
+    llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class ProspectusTool(BaseTool):
     name = "招股说明书"
@@ -254,8 +254,8 @@ def load_database(sqlite_path, locally = False, tokenizer = None, llm = None):
     class Config:
       arbitrary_types_allowed = True
     db: SQLDatabase
-    tokenizer: PreTrainedTokenizerFast
-    llm: HuggingFaceEndpoint if not locally else HuggingFacePipeline
+    tokenizer: Union[PreTrainedTokenizerFast,CodeLlamaTokenizer]
+    llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class DatabaseTool(BaseTool):
     name = "金融数据查询工具"
