@@ -79,9 +79,9 @@ def Qwen2(locally = False):
       device = 0,
       pipeline_kwargs = {
         "max_length": 131072,
-        "do_sample": False,
-        "temperature": 1,
-        "top_p": 1,
+        "do_sample": True,
+        "temperature": 0.8,
+        "top_p": 0.8,
         "use_cache": True,
         "return_full_text": False
       }
@@ -91,8 +91,8 @@ def Qwen2(locally = False):
     llm = HuggingFaceEndpoint(
       endpoint_url = 'Qwen/Qwen2-7B',
       task = 'text-generation',
-      do_sample = False,
-      temperature = 1,
-      top_p = 1
+      do_sample = True,
+      temperature = 0.8,
+      top_p = 0.8,
     )
   return tokenizer, llm
