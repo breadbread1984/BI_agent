@@ -26,16 +26,21 @@ class Agent(object):
                          password = config.neo4j_password,
                          database = config.neo4j_db,
                          locally = config.run_locally
-                       ) if config.unstructure_method == 'RAG' else \
+                         tokenizer = tokenizer,
+                         llm = llm) if config.unstructure_method == 'RAG' else \
                        load_knowledge_graph(
                          host = config.neo4j_host,
                          username = config.neo4j_username,
                          password = config.neo4j_password,
                          database = config.neo4j_db,
-                         locally = config.run_locally)
+                         locally = config.run_locally,
+                         tokenizer = tokenizer,
+                         llm = llm)
     structure_tool = load_database(
                        'bs_challenge_financial_14b_dataset/dataset/博金杯比赛数据.db',
-                       locally = config.run_locally)
+                       locally = config.run_locally,
+                       tokenizer = tokenizer,
+                       llm = llm)
     tools = load_tools(tools, llm = llm, serper_api_key = 'd075ad1b698043747f232ec1f00f18ee0e7e8663') + \
       [unstructure_tool, structure_tool]
     prompt = agent_template(tokenizer, tools)
