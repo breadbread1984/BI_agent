@@ -67,10 +67,10 @@ def CodeLlama(locally = False):
 
 def Qwen2(locally = False):
   login(token = config.huggingface_token)
-  tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen2-7B')
+  tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen2-7B-Instruct')
   if locally:
     llm = HuggingFacePipeline.from_model_id(
-      model_id = 'Qwen/Qwen2-7B',
+      model_id = 'Qwen/Qwen2-7B-Instruct',
       task = 'text-generation',
       device = 0,
       pipeline_kwargs = {
@@ -85,7 +85,7 @@ def Qwen2(locally = False):
   else:
     environ['HUGGINGFACEHUB_API_TOKEN'] = config.huggingface_token
     llm = HuggingFaceEndpoint(
-      endpoint_url = 'Qwen/Qwen2-7B',
+      endpoint_url = 'Qwen/Qwen2-7B-Instruct',
       task = 'text-generation',
       do_sample = False,
       temperature = 0.8,
