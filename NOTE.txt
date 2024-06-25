@@ -1,0 +1,9 @@
+备份数据库的方法
+sudo systemctl stop neo4j
+mkdir backup
+sudo neo4j-admin database dump --to-path=backup neo4j --verbose
+sudo systemctl start neo4j
+恢复数据库的方法
+sudo systemctl stop neo4j
+sudo neo4j-admin database load --overwrite-destination=true --from-path=backup neo4j --verbose
+sudo systemctl start neo4j
