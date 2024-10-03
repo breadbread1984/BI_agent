@@ -4,7 +4,7 @@ from os import environ, remove
 from os.path import exists, join, isdir
 from typing import Optional, Type, List, Dict, Union, Any
 from transformers import AutoTokenizer, PreTrainedTokenizerFast, CodeLlamaTokenizer
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
 from langchain.graphs import Neo4jGraph
 from langchain.vectorstores import Neo4jVector
@@ -35,8 +35,8 @@ def load_vectordb(host = "bolt://localhost:7687", username = "neo4j", password =
     llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class ProspectusTool(BaseTool):
-    name = "招股说明书"
-    description = "当你有招股说明书相关问题，可以调用这个工具"
+    name: str = "招股说明书"
+    description: str = "当你有招股说明书相关问题，可以调用这个工具"
     args_schema: Type[BaseModel] = ProspectusInput
     return_direct: bool = True
     config: ProspectusConfig
@@ -207,8 +207,8 @@ def load_knowledge_graph(host = 'bolt://localhost:7687', username = 'neo4j', pas
     llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class ProspectusTool(BaseTool):
-    name = "招股说明书"
-    description = '当你有招股说明书相关问题，可以调用这个工具'
+    name: str = "招股说明书"
+    description: str = '当你有招股说明书相关问题，可以调用这个工具'
     args_schema: Type[BaseModel] = ProspectusInput
     return_direct: bool = True
     config: ProspectusConfig
@@ -258,8 +258,8 @@ def load_database(sqlite_path, tokenizer = None, llm = None):
     llm: Union[HuggingFaceEndpoint, HuggingFacePipeline]
 
   class DatabaseTool(BaseTool):
-    name = "金融数据查询工具"
-    description = '当你有基金基本信息，基金股票持仓明细，基金债券持仓明细，基金可转债持仓明细，基金日行情表，A股票日行情表，港股票日行情表，A股公司行业划分表，基金规模变动表，基金份额持有人结构，相关问题可以调用这个工具'
+    name: str = "金融数据查询工具"
+    description: str = '当你有基金基本信息，基金股票持仓明细，基金债券持仓明细，基金可转债持仓明细，基金日行情表，A股票日行情表，港股票日行情表，A股公司行业划分表，基金规模变动表，基金份额持有人结构，相关问题可以调用这个工具'
     args_schema: Type[BaseModel] = DatabaseInput
     return_direct: bool = True
     config: DatabaseConfig
